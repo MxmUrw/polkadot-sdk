@@ -230,10 +230,13 @@ fn claim_primary_slot(
 	keystore: &KeystorePtr,
 	keys: &[(AuthorityId, usize)],
 ) -> Option<(PreDigest, AuthorityId)> {
+	log::info!("trying to claim primary slot for slot: {slot:?}, epoch: {epoch:?}, c: {c:?}, with keys: {keys:?}");
+
 	let mut epoch_index = epoch.epoch_index;
 	if epoch.end_slot() <= slot {
 		// Slot doesn't strictly belong to the epoch, create a clone with fixed values.
 		epoch_index = epoch.clone_for_slot(slot).epoch_index;
+		log::info!("epoch end slot <= slot");
 	}
 
 	let data = make_vrf_sign_data(&epoch.randomness, slot, epoch_index);
@@ -252,6 +255,8 @@ fn claim_primary_slot(
 				)
 				.map(|bytes| u128::from_le_bytes(bytes) < threshold)
 				.unwrap_or_default();
+
+			log::info!("can_claim for {authority_id:?} is {can_claim}");
 
 			if can_claim {
 				let pre_digest = PreDigest::Primary(PrimaryPreDigest {
