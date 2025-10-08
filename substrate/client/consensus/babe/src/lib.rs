@@ -772,7 +772,7 @@ where
 		slot: Slot,
 		epoch_descriptor: &ViableEpochDescriptor<B::Hash, NumberFor<B>, Epoch>,
 	) -> Option<Self::Claim> {
-		debug!(target: LOG_TARGET, "Attempting to claim slot {}", slot);
+		info!(target: LOG_TARGET, "Attempting to claim slot {}, for descriptor: {epoch_descriptor:?}", slot);
 		let s = authorship::claim_slot(
 			slot,
 			self.epoch_changes
@@ -783,7 +783,7 @@ where
 		);
 
 		if s.is_some() {
-			debug!(target: LOG_TARGET, "Claimed slot {}", slot);
+			info!(target: LOG_TARGET, "Claimed slot {}", slot);
 		}
 
 		s

@@ -423,7 +423,7 @@ where
 
 	/// Get a reference to an epoch with given identifier.
 	pub fn epoch(&self, id: &EpochIdentifier<Hash, Number>) -> Option<&E> {
-		self.epochs.get(&(id.hash, id.number)).and_then(|v| match v {
+		let result = self.epochs.get(&(id.hash, id.number)).and_then(|v| match v {
 			PersistedEpoch::Genesis(ref epoch_0, _)
 				if id.position == EpochIdentifierPosition::Genesis0 =>
 				Some(epoch_0),
@@ -434,7 +434,9 @@ where
 				if id.position == EpochIdentifierPosition::Regular =>
 				Some(epoch_n),
 			_ => None,
-		})
+		});
+		log::info!("epoch reference is: {result:?} for id {id:?}");
+		result
 	}
 
 	/// Get a reference to a viable epoch with given descriptor.
@@ -446,12 +448,15 @@ where
 	where
 		G: FnOnce(E::Slot) -> E,
 	{
-		match descriptor {
+		log::info!("trying to get viable epoch for {descriptor:?}");
+		let result = match descriptor {
 			ViableEpochDescriptor::UnimportedGenesis(slot) =>
 				Some(ViableEpoch::UnimportedGenesis(make_genesis(*slot))),
 			ViableEpochDescriptor::Signaled(identifier, _) =>
 				self.epoch(identifier).map(ViableEpoch::Signaled),
-		}
+		};
+		log::info!("viable epoch is: {result:?}");
+		result
 	}
 
 	/// Get a mutable reference to an epoch with given identifier.
