@@ -376,6 +376,7 @@ where
 		slot: Slot,
 		authorities: &Self::AuxData,
 	) -> Option<Self::Claim> {
+		log::info!("trying to claim slot for {slot:?}, with authorities: {authorities:?}");
 		crate::standalone::claim_slot::<P>(slot, authorities, &self.keystore).await
 	}
 

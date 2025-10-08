@@ -94,10 +94,12 @@ pub async fn claim_slot<P: Pair>(
 	keystore: &KeystorePtr,
 ) -> Option<P::Public> {
 	let expected_author = slot_author::<P>(slot, authorities);
+	log::info!("got author");
 	expected_author.and_then(|p| {
 		if keystore.has_keys(&[(p.to_raw_vec(), sp_application_crypto::key_types::AURA)]) {
 			Some(p.clone())
 		} else {
+			log::info!("keystore doesnt have the keys");
 			None
 		}
 	})
