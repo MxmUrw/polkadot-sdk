@@ -290,6 +290,8 @@ pub trait SimpleSlotWorker<B: BlockT> {
 	where
 		Self: Sync,
 	{
+		log::info!("inside on_slot");
+
 		let slot = slot_info.slot;
 		let telemetry = self.telemetry();
 		let logging_target = self.logging_target();
@@ -297,13 +299,14 @@ pub trait SimpleSlotWorker<B: BlockT> {
 		let proposing_remaining_duration = self.proposing_remaining_duration(&slot_info);
 
 		let end_proposing_at = if proposing_remaining_duration == Duration::default() {
-			debug!(
+			info!(
 				target: logging_target,
 				"Skipping proposal slot {} since there's no time left to propose", slot,
 			);
 
 			return None
 		} else {
+			log::info!("got end_proposal_at time");
 			Instant::now() + proposing_remaining_duration
 		};
 
@@ -329,7 +332,11 @@ pub trait SimpleSlotWorker<B: BlockT> {
 			},
 		};
 
+		log::info!("generated aux_data");
+
 		self.notify_slot(&slot_info.chain_head, slot, &aux_data);
+
+		log::info!("called notify_slot");
 
 		let authorities_len = self.authorities_len(&aux_data);
 
@@ -337,7 +344,7 @@ pub trait SimpleSlotWorker<B: BlockT> {
 			self.sync_oracle().is_offline() &&
 			authorities_len.map(|a| a > 1).unwrap_or(false)
 		{
-			debug!(target: logging_target, "Skipping proposal slot. Waiting for the network.");
+			info!(target: logging_target, "Skipping proposal slot. Waiting for the network.");
 			telemetry!(
 				telemetry;
 				CONSENSUS_DEBUG;
@@ -348,13 +355,17 @@ pub trait SimpleSlotWorker<B: BlockT> {
 			return None
 		}
 
+		log::info!("claiming slot");
+
+
 		let claim = self.claim_slot(&slot_info.chain_head, slot, &aux_data).await?;
 
 		if self.should_backoff(slot, &slot_info.chain_head) {
+			log::info!("backing off = true!");
 			return None
 		}
 
-		debug!(target: logging_target, "Starting authorship at slot: {slot}");
+		info!(target: logging_target, "Starting authorship at slot: {slot}");
 
 		telemetry!(telemetry; CONSENSUS_DEBUG; "slots.starting_authorship"; "slot_num" => slot);
 
@@ -375,7 +386,12 @@ pub trait SimpleSlotWorker<B: BlockT> {
 			},
 		};
 
+
+		info!("got proposer");
+
 		let proposal = self.propose(proposer, &claim, slot_info, end_proposing_at).await?;
+
+		info!("got proposal!");
 
 		let (block, storage_proof) = (proposal.block, proposal.proof);
 		let (header, body) = block.deconstruct();
