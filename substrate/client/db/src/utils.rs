@@ -363,13 +363,24 @@ fn open_kvdb_rocksdb<Block: BlockT>(
 		db_config.max_open_files = 256;
 	}
 
+	{
+    	use sp_core::H256;
+		let db = kvdb_rocksdb::Database::open(&db_config, path)?;
+		let db = sp_database::as_database(db);
+		let genesis = read_genesis_hash::<H256>(&*db);
+		log::info!("found genesis hash: {genesis:?}");
+	}
+
 	if recreate_onstart {
 		log::info!("Deleting old db files and recreating a new RocksDB database on startup.");
 		drop_database(path)?;
 		db_config.create_if_missing = true;
 	}
 
+
 	let db = kvdb_rocksdb::Database::open(&db_config, path)?;
+
+
 	// write database version only after the database is successfully opened
 	crate::upgrade::update_version(path)?;
 	Ok(sp_database::as_database(db))
