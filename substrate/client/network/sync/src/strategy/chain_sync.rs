@@ -2177,6 +2177,9 @@ pub fn validate_blocks<Block: BlockT>(
 	request: Option<BlockRequest<Block>>,
 ) -> Result<Option<NumberFor<Block>>, BadPeer> {
 	if let Some(request) = request {
+
+		info!("validation: for request {request:?} received blocks: {blocks:?}");
+
 		if Some(blocks.len() as _) > request.max {
 			debug!(
 				target: LOG_TARGET,
